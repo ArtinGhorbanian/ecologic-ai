@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#eef8f1">
+    <meta name="description" content="EcoLogic turns environmental observations into structured, automated assessments and action roadmaps.">
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token is defined else '' }}">
+    <title>EcoLogic | Environmental Decision Support</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/ecologic-bot.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#mainContent">Skip to assessment</a>
+
+    <svg class="icon-library" aria-hidden="true">
+        <symbol id="icon-arrow" viewBox="0 0 24 24">
+            <path d="M5 12h14M13 6l6 6-6 6"></path>
+        </symbol>
+        <symbol id="icon-camera" viewBox="0 0 24 24">
+            <path d="M4 7.5h3l1.5-2h7l1.5 2h3v11H4z"></path>
+            <circle cx="12" cy="13" r="3.5"></circle>
+        </symbol>
+        <symbol id="icon-mic" viewBox="0 0 24 24">
+            <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+            <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"></path>
+        </symbol>
+        <symbol id="icon-stop" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+        </symbol>
+        <symbol id="icon-history" viewBox="0 0 24 24">
+            <path d="M4 5v5h5M5.5 9A8 8 0 1 1 4 14"></path>
+            <path d="M12 7.5V12l3 2"></path>
+        </symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"></path>
+        </symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24">
+            <path d="m6 6 12 12M18 6 6 18"></path>
+        </symbol>
+        <symbol id="icon-message" viewBox="0 0 24 24">
+            <path d="M5 5h14v11H9l-4 3z"></path>
+            <path d="M8 9h8M8 12h5"></path>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24">
+            <path d="M12 16V4M7 9l5-5 5 5M5 15v5h14v-5"></path>
+        </symbol>
+        <symbol id="icon-chevron" viewBox="0 0 24 24">
+            <path d="m7 9 5 5 5-5"></path>
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24">
+            <path d="m5 12 4 4L19 6"></path>
+        </symbol>
+        <symbol id="icon-refresh" viewBox="0 0 24 24">
+            <path d="M19 7V3l-2 2a8 8 0 1 0 2.5 8M19 3h-4"></path>
+        </symbol>
+    </svg>
+
+    <header class="topbar">
+        <a class="brand" href="#top" aria-label="EcoLogic home">
+            <img class="brand__mark" src="{{ url_for('static', filename='img/ecologic-bot.svg') }}" alt="" width="48" height="48">
+            <span class="brand__copy">
+                <strong>EcoLogic</strong>
+                <span>Decision clarity</span>
+            </span>
+        </a>
+
+        <div class="service-summary" aria-label="Service status">
+            <span id="modeBadge" class="mode-badge" data-mode="checking">Mode: checking</span>
+            <span id="serviceStatus" class="service-status" role="status">
+                <span class="service-status__dot" aria-hidden="true"></span>
+                Checking service status
+            </span>
+        </div>
+    </header>
+
+    <div id="top" class="app-shell">
+        <aside class="control-rail" aria-labelledby="observationTitle">
+            <div class="rail-heading">
+                <p class="eyebrow">Start with evidence</p>
+                <h1 id="observationTitle">Describe the observation</h1>
+                <p>Share what you noticed. Add a site image when visual context would help.</p>
+            </div>
+
+            <form id="analysisForm" novalidate>
+                <div class="field-group">
+                    <div class="field-heading">
+                        <label for="userInput">Environmental observation</label>
+                        <span id="inputCount" class="character-count">0 / 4,000</span>
+                    </div>
+                    <p id="observationHint" class="field-hint">Include location, timing, scale, and any recent changes. Do not include personal or confidential information.</p>
+                    <textarea id="userInput" name="observation" rows="7" maxlength="4000" dir="auto" aria-describedby="observationHint observationError" placeholder="Example: Energy use rises sharply every weekday after 2 PM."></textarea>
+                    <p id="observationError" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <div class="example-group" aria-labelledby="exampleLabel">
+                    <span id="exampleLabel" class="field-hint">Try an example</span>
+                    <div class="example-list">
+                        <button class="example-chip" type="button" data-example="Our electricity demand rises sharply every weekday after 2 PM.">Energy spike</button>
+                        <button class="example-chip" type="button" data-example="There is recurring moisture and staining below a pipe connection.">Possible leak</button>
+                        <button class="example-chip" type="button" data-example="How can a small office reduce avoidable waste each month?">Waste reduction</button>
+                    </div>
+                </div>
+
+                <fieldset class="evidence-group">
+                    <legend>Supporting evidence <span>(optional)</span></legend>
+                    <div class="evidence-actions">
+                        <label class="button button--secondary upload-control" for="imageInput">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-camera"></use></svg>
+                            Add image
+                        </label>
+                        <input class="file-input" type="file" id="imageInput" name="image" accept="image/jpeg,image/png,image/webp" aria-describedby="imageRequirements imageStatus">
+                        <button id="micButton" class="button button--secondary" type="button" aria-pressed="false" aria-describedby="voiceDisclosure">
+                            <svg class="icon mic-icon" aria-hidden="true"><use href="#icon-mic"></use></svg>
+                            <span id="micButtonLabel">Use voice</span>
+                        </button>
+                    </div>
+                    <p id="voiceDisclosure" class="privacy-disclosure">Voice recognition is provided by your browser and may send audio to its vendor. Typing remains local to this browser until you submit.</p>
+                    <p id="demoImageDisclosure" class="privacy-disclosure privacy-disclosure--warning" hidden>Demo mode does not inspect image pixels. Describe every relevant visual detail in the observation text.</p>
+                    <p id="imageRequirements" class="field-hint">JPEG, PNG, or WebP; up to 2 MB. The image is sent only when you submit this assessment.</p>
+                    <p id="imageStatus" class="field-status" role="status"></p>
+
+                    <figure id="imagePreview" class="image-preview" hidden>
+                        <img id="previewImage" src="" alt="Selected image preview">
+                        <figcaption>
+                            <strong id="previewName"></strong>
+                            <span id="previewMeta"></span>
+                        </figcaption>
+                        <button id="removeImageButton" class="icon-button icon-button--danger" type="button" aria-label="Remove selected image">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+                        </button>
+                    </figure>
+                </fieldset>
+
+                <div id="analysisError" class="error-panel" role="alert" hidden>
+                    <div>
+                        <strong>Assessment could not be completed</strong>
+                        <p id="analysisErrorMessage"></p>
+                    </div>
+                    <div class="error-panel__actions">
+                        <button id="retryAnalysisButton" class="button button--small" type="button">
+                            <svg class="icon" aria-hidden="true"><use href="#icon-refresh"></use></svg>
+                            Retry
+                        </button>
+                        <button id="dismissAnalysisError" class="button button--small button--quiet" type="button">Dismiss</button>
+                    </div>
+                </div>
+
+                <button id="analyzeButton" class="button button--primary button--submit" type="submit">
+                    <span id="analyzeButtonLabel">Assess observation</span>
+                    <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                </button>
+                <p id="analysisStatus" class="submit-status" role="status" aria-live="polite"></p>
+            </form>
+
+            <p class="review-notice">Automated decision-support estimates can be incomplete. Verify safety, financial, regulatory, and engineering decisions with a qualified professional.</p>
+
+            <section class="history-region" aria-labelledby="historyTitle">
+                <button id="historyToggle" class="history-toggle" type="button" aria-expanded="false" aria-controls="historyPanel">
+                    <span>
+                        <svg class="icon" aria-hidden="true"><use href="#icon-history"></use></svg>
+                        <span id="historyTitle">Saved assessments</span>
+                    </span>
+                    <svg class="icon history-toggle__chevron" aria-hidden="true"><use href="#icon-chevron"></use></svg>
+                </button>
+                <div id="historyPanel" class="history-panel" hidden>
+                    <p id="historyStatus" class="field-status" role="status"></p>
+                    <ul id="historyList" class="history-list"></ul>
+                </div>
+            </section>
+        </aside>
+
+        <main id="mainContent" class="assessment-workspace" tabindex="-1">
+            <section id="emptyState" class="empty-state" aria-labelledby="emptyTitle">
+                <img src="{{ url_for('static', filename='img/ecologic-bot.svg') }}" alt="" width="112" height="112">
+                <p class="eyebrow">Observation to action</p>
+                <h2 id="emptyTitle">Start with what you can see</h2>
+                <p>EcoLogic organizes an observation into an assessment, contributing factors, and a practical roadmap.</p>
+                <ol class="flow-preview" aria-label="Assessment flow">
+                    <li><span>1</span> Observe</li>
+                    <li><span>2</span> Assess</li>
+                    <li><span>3</span> Plan</li>
+                    <li><span>4</span> Follow up</li>
+                </ol>
+            </section>
+
+            <section id="resultContainer" class="results" aria-labelledby="resultTitle" aria-live="polite" hidden>
+                <header class="result-header">
+                    <div>
+                        <p class="eyebrow">Automated assessment</p>
+                        <h2 id="resultTitle" tabindex="-1">Assessment overview</h2>
+                        <p id="resultSummary" class="result-summary" dir="auto"></p>
+                    </div>
+                    <div class="result-badges" aria-label="Assessment references">
+                        <span id="statusBadge" class="status-badge">Assessment ready</span>
+                        <span id="isoBadge" class="reference-badge" hidden></span>
+                    </div>
+                </header>
+
+                <p class="assessment-disclaimer">This is an automated decision-support estimate, not a site inspection, certification, diagnosis, or guarantee.</p>
+
+                <section class="metric-grid" aria-label="Assessment summary">
+                    <article class="metric-card">
+                        <span class="metric-card__label">Focus area</span>
+                        <strong id="categoryValue" class="metric-card__value" dir="auto">Not reported</strong>
+                    </article>
+                    <article id="riskCard" class="metric-card metric-card--risk" data-level="neutral">
+                        <span class="metric-card__label">Automated 0-100 score</span>
+                        <strong id="riskValue" class="metric-card__value">Not reported</strong>
+                        <span id="riskLabel" class="metric-card__note">No numeric score returned</span>
+                    </article>
+                    <article class="metric-card">
+                        <span class="metric-card__label">Potential impact</span>
+                        <strong id="potentialValue" class="metric-card__value" dir="auto">Not estimated</strong>
+                        <span class="metric-card__note">Automated estimate</span>
+                    </article>
+                    <article class="metric-card">
+                        <span class="metric-card__label">Evidence provided</span>
+                        <strong id="evidenceValue" class="metric-card__value">Text observation</strong>
+                        <span class="metric-card__note">More context may change the result</span>
+                    </article>
+                </section>
+
+                <section id="riskBreakdownSection" class="content-card" aria-labelledby="riskBreakdownTitle" hidden>
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Assessment dimensions</p>
+                            <h3 id="riskBreakdownTitle">Risk breakdown</h3>
+                        </div>
+                        <span class="section-note">Score: 0–100</span>
+                    </div>
+                    <ul id="riskBreakdownList" class="risk-breakdown-list"></ul>
+                </section>
+
+                <section class="content-card insight-card" aria-labelledby="insightTitle">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">What the assessment suggests</p>
+                            <h3 id="insightTitle">Decision summary</h3>
+                        </div>
+                    </div>
+                    <p id="assessmentMessage" class="assessment-message" dir="auto"></p>
+                    <div id="causesRegion" class="causes-region" hidden>
+                        <h4>Contributing factors</h4>
+                        <ul id="causesList"></ul>
+                    </div>
+                </section>
+
+                <section class="content-card score-context-card" aria-labelledby="scoreContextHeading">
+                    <div class="section-heading section-heading--action">
+                        <div>
+                            <p class="eyebrow">Understand the scale</p>
+                            <h3 id="scoreContextHeading">Score context</h3>
+                        </div>
+                        <button id="scoreContextToggle" class="button button--secondary button--small" type="button" aria-expanded="false" aria-controls="scoreContextContent">
+                            Show score context
+                            <svg class="icon" aria-hidden="true"><use href="#icon-chevron"></use></svg>
+                        </button>
+                    </div>
+                    <div id="scoreContextContent" class="score-context-content" hidden>
+                        <p>The provider returned one current automated score. No forecast, target, trend, probability, or severity threshold was generated.</p>
+                        <div class="score-context-legend" aria-hidden="true">
+                            <span><i class="score-marker-swatch"></i>Current provider-supplied score</span>
+                        </div>
+                        <figure class="score-context-figure" dir="ltr">
+                            <svg id="scoreContextChart" viewBox="0 0 720 180" role="img" aria-labelledby="scoreContextChartTitle scoreContextChartDescription" preserveAspectRatio="xMidYMid meet">
+                                <title id="scoreContextChartTitle">Current automated score on a 0-100 scale</title>
+                                <desc id="scoreContextChartDescription">Score context will appear after an assessment.</desc>
+                                <g id="scoreContextGrid"></g>
+                                <line id="scoreContextMarker" class="score-context-marker" hidden></line>
+                                <circle id="scoreContextDot" class="score-context-dot" r="7" hidden></circle>
+                                <text id="scoreContextValueLabel" class="score-context-value" text-anchor="middle" hidden></text>
+                            </svg>
+                            <figcaption>Only the provider-supplied current score is shown. The scale does not classify severity.</figcaption>
+                        </figure>
+                        <div class="table-wrap">
+                            <table class="score-context-table">
+                                <caption>Provider-supplied score</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Measure</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scoreContextTableBody"></tbody>
+                            </table>
+                        </div>
+                        <details class="method-note">
+                            <summary>What this view does and does not show</summary>
+                            <p>The interface places the returned score on a fixed 0-100 scale. It does not calculate a forecast, target, probability, trend, or severity band.</p>
+                        </details>
+                    </div>
+                </section>
+
+                <section class="content-card roadmap-card" aria-labelledby="roadmapTitle">
+                    <div class="section-heading roadmap-heading">
+                        <div>
+                            <p class="eyebrow">From insight to action</p>
+                            <h3 id="roadmapTitle">Recommended action roadmap</h3>
+                        </div>
+                        <div class="roadmap-progress">
+                            <label id="roadmapProgressLabel" for="roadmapProgress">0 of 0 marked complete</label>
+                            <progress id="roadmapProgress" max="1" value="0">0 of 0 steps</progress>
+                        </div>
+                    </div>
+                    <p class="section-intro">Sequence and timing should be verified against site conditions, budget, and professional guidance.</p>
+                    <ol id="roadmapList" class="roadmap-list"></ol>
+                    <p id="roadmapEmpty" class="empty-copy" hidden>No roadmap was returned for this assessment.</p>
+                </section>
+
+                <section class="content-card coach-card" aria-labelledby="coachTitle">
+                    <img src="{{ url_for('static', filename='img/ecologic-bot.svg') }}" alt="" width="72" height="72">
+                    <div class="coach-card__content">
+                        <p class="eyebrow">Eco-Coach</p>
+                        <h3 id="coachTitle">Need a plain-language explanation?</h3>
+                        <p>Ask Eco-Coach to restate this assessment without changing its underlying estimate.</p>
+                        <button id="coachButton" class="button button--secondary" type="button">Explain this assessment</button>
+                        <p id="coachStatus" class="field-status" role="status"></p>
+                        <div id="coachResult" class="coach-result" aria-live="polite" hidden>
+                            <p id="coachMessage" dir="auto"></p>
+                            <dl>
+                                <div id="coachTipRow">
+                                    <dt>Practical tip</dt>
+                                    <dd id="coachTip" dir="auto"></dd>
+                                </div>
+                                <div id="coachNoteRow">
+                                    <dt>Context note</dt>
+                                    <dd id="coachNote" dir="auto"></dd>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="followup-card" aria-labelledby="followupTitle">
+                    <div>
+                        <p class="eyebrow">Follow up</p>
+                        <h3 id="followupTitle">Ask about this assessment</h3>
+                        <p>Explore assumptions, priorities, and next steps. Automated replies require verification.</p>
+                    </div>
+                    <button id="openChatButton" class="button button--primary" type="button">
+                        Open follow-up chat
+                        <svg class="icon" aria-hidden="true"><use href="#icon-message"></use></svg>
+                    </button>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <button id="chatFab" class="chat-fab" type="button" aria-label="Open EcoLogic follow-up chat" hidden>
+        <img src="{{ url_for('static', filename='img/ecologic-bot.svg') }}" alt="" width="44" height="44">
+        <span>Ask EcoLogic</span>
+    </button>
+
+    <dialog id="chatDialog" class="app-dialog chat-dialog" aria-labelledby="chatTitle">
+        <div class="dialog-shell chat-shell">
+            <header class="dialog-header">
+                <div class="dialog-title">
+                    <img src="{{ url_for('static', filename='img/ecologic-bot.svg') }}" alt="" width="48" height="48">
+                    <div>
+                        <p class="eyebrow">Assessment follow-up</p>
+                        <h2 id="chatTitle">EcoLogic assistant</h2>
+                    </div>
+                </div>
+                <form method="dialog">
+                    <button class="icon-button" type="submit" value="cancel" aria-label="Close follow-up chat">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+                    </button>
+                </form>
+            </header>
+            <p class="chat-disclaimer">Automated replies may be incomplete. Do not use chat as a substitute for emergency, safety, legal, financial, or engineering advice.</p>
+            <div id="chatHistory" class="chat-history" role="log" aria-live="polite" aria-relevant="additions"></div>
+            <p id="chatStatus" class="field-status chat-status" role="status"></p>
+            <form id="chatForm" class="chat-form">
+                <label class="visually-hidden" for="chatInput">Ask a follow-up question</label>
+                <textarea id="chatInput" name="message" rows="2" maxlength="1000" dir="auto" placeholder="Ask about assumptions or next steps…"></textarea>
+                <button id="sendChatButton" class="icon-button icon-button--primary" type="submit" aria-label="Send follow-up question">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-arrow"></use></svg>
+                </button>
+            </form>
+        </div>
+    </dialog>
+
+    <dialog id="deleteDialog" class="app-dialog" aria-labelledby="deleteTitle" aria-describedby="deleteDescription">
+        <form id="deleteForm" class="dialog-shell dialog-shell--compact">
+            <div class="dialog-symbol dialog-symbol--danger" aria-hidden="true">
+                <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
+            </div>
+            <h2 id="deleteTitle">Delete saved assessment?</h2>
+            <p id="deleteDescription">This removes the selected entry from the history shown by this service. Retention outside this view depends on the service configuration.</p>
+            <p id="deleteItemLabel" class="dialog-item-label"></p>
+            <p id="deleteStatus" class="field-status" role="status"></p>
+            <div class="dialog-actions">
+                <button id="cancelDeleteButton" class="button button--secondary" type="button">Cancel</button>
+                <button id="confirmDeleteButton" class="button button--danger" type="submit">Delete entry</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="celebrationDialog" class="app-dialog" aria-labelledby="celebrationTitle">
+        <div class="dialog-shell dialog-shell--compact">
+            <img class="dialog-mark" src="{{ url_for('static', filename='img/ecologic-bot.svg') }}" alt="" width="88" height="88">
+            <h2 id="celebrationTitle">Roadmap marked complete</h2>
+            <p>All suggested steps are checked. Confirm the real-world outcome with measurements and appropriate professional review.</p>
+            <form method="dialog">
+                <button class="button button--primary" type="submit" value="close">Continue</button>
+            </form>
+        </div>
+    </dialog>
+
+    <div id="globalAnnouncer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

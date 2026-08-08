@@ -1,0 +1,51 @@
+# Local secrets and configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+service-account*.json
+secrets.*
+private.*
+
+# Local and user-generated data
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+instance/
+uploads/
+logs/
+
+# Original unverified raster artwork retained locally for provenance only
+static/img/chatbot.png
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build, cache, and editor artifacts
+dist/
+build/
+.playwright-cli/
+tmp/
+temp/
+cache/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local release evidence
+.aionex/
+.codex/

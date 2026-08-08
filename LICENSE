@@ -1,0 +1,24 @@
+EcoLogic Private Preview Rights Notice
+Version 1.0, 8 August 2026
+
+No public license is granted for the application source code in this
+repository. Rights remain with their respective holders while chain-of-title,
+team, employer, client, sponsor, and competition status are being verified.
+
+Access to this private repository does not grant permission to reproduce,
+modify, redistribute, sublicense, sell, publicly display, or commercially use
+the application source except under separate written authorization from every
+applicable rights holder.
+
+This notice does not restrict third-party material that is distributed under
+its own license. In particular, the bundled Plus Jakarta Sans font files remain
+licensed under the SIL Open Font License 1.1 in static/fonts/OFL.txt. Installed
+Python dependencies remain under the licenses identified in
+THIRD_PARTY_NOTICES.md.
+
+This is an interim clearance notice, not an assertion that AIONEX exclusively
+owns the underlying copyright. Replace it with a verified proprietary license
+only after the clearance checklist in docs/RIGHTS_STATUS.md is complete.
+
+THE APPLICATION SOURCE IS PROVIDED FOR PRIVATE EVALUATION "AS IS", WITHOUT
+WARRANTY OF ANY KIND, TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW.

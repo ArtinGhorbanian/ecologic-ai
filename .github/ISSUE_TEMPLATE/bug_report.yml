@@ -1,0 +1,51 @@
+name: Bug report
+description: Report reproducible incorrect behavior without sensitive data.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include credentials, personal data, client data, or exploit details. Use private security reporting for vulnerabilities.
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider mode
+      options:
+        - Demo
+        - OpenAI (experimental)
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or release
+      placeholder: v0.2.0 or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Use synthetic, non-sensitive examples.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: OS, Python, browser, relevant non-secret configuration
+    validations:
+      required: true

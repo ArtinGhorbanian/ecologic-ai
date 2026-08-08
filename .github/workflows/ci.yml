@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.lock
+
+      - name: Install exact validation environment
+        run: |
+          python -m pip install pip==26.1.2
+          python -m pip install -r requirements-dev.lock
+
+      - name: Test
+        env:
+          ECOLOGIC_PROVIDER: demo
+          ECOLOGIC_SECRET_KEY: ci-only-secret-that-is-longer-than-thirty-two-bytes
+          OPENAI_API_KEY: test-not-a-real-key
+        run: python -m pytest -q
+
+      - name: Lint and format
+        run: |
+          python -m ruff check .
+          python -m ruff format --check .
+
+      - name: Type-check
+        env:
+          ECOLOGIC_PROVIDER: demo
+          ECOLOGIC_SECRET_KEY: ci-only-secret-that-is-longer-than-thirty-two-bytes
+          OPENAI_API_KEY: test-not-a-real-key
+        run: python -m mypy
+
+      - name: Static security scan
+        run: python -m bandit -q -r app.py wsgi.py ecologic
+
+      - name: Audit runtime dependencies
+        run: python -m pip_audit -r requirements.lock --no-deps --disable-pip --progress-spinner off
+
+      - name: Check browser script syntax
+        run: node --check static/script.js
